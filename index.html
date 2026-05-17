@@ -756,7 +756,7 @@ footer{background:var(--paper);border-top:1px solid var(--paper-line-soft);paddi
     <div class="metric">
       <div class="metric-label">Rate per mile</div>
       <div class="metric-value"><em>+9%</em></div>
-      <div class="metric-desc">Smarter load selection, not faster</div>
+      <div class="metric-desc">Smarter load selection</div>
     </div>
     <div class="metric">
       <div class="metric-label">Dispatcher time</div>
@@ -854,7 +854,7 @@ footer{background:var(--paper);border-top:1px solid var(--paper-line-soft);paddi
 <div class="fx-section section-warm">
   <div class="fx-band reveal">
     <div class="fx-band-label">01 · Plan the week</div>
-    <div class="fx-band-head">Reads your fleet.<br><em>Solves the week.</em></div>
+    <div class="fx-band-head">Reads your data.<br><em>Plans the week.</em></div>
     <div class="fx-band-body">Every Sunday night, Planner reads live data from your ELD and TMS — driver hours, truck positions, customer commitments. Then solves the full week as one system. Every truck, every driver, every load.</div>
   </div>
   <div class="fx-card-wrap reveal">
@@ -1214,11 +1214,11 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     resetState();
     showStage(stage1);
 
-    await sleep(1200);
+    await sleep(3800);
 
     // Stage 1a: focus input
     inputWrap.classList.add('focused');
-    await sleep(500);
+    await sleep(700);
 
     // Stage 1b: type the message
     await typeText('Max called in sick');
