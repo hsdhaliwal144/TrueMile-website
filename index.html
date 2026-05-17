@@ -1196,12 +1196,12 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     if(target) target.classList.add('active');
   }
 
-  async function typeText(text, speed=55){
+  async function typeText(text, speed=35){
     input.classList.remove('placeholder');
     inputText.textContent = '';
     for(let i=0; i<=text.length; i++){
       inputText.textContent = text.substring(0, i);
-      await sleep(speed + Math.random()*30);
+      await sleep(speed + Math.random()*20);
     }
   }
 
