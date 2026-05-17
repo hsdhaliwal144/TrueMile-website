@@ -1,4 +1,4 @@
-<!doctype html>
+]<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -79,12 +79,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .bs:hover{border-color:var(--charcoal);color:var(--ink);}
 
 /* ===========================================
-   HERO — DISPATCHER WORKFLOW ANIMATION
-   Stage 1: chat input (typing) → suggestion chips
-   Stage 2: re-optimize button highlighted → clicked
-   Stage 3: re-planning the week (progress bar)
-   Stage 4: plan updated (done state)
-   Stage 5: notify queue card surfaces
+   HERO — DISPATCHER WORKFLOW ANIMATION (LOOPS)
+   Fixed-height card. Stages cross-fade in place.
    =========================================== */
 .hero-right{flex:0 0 auto;width:540px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;opacity:0;animation:fup 1s .4s ease forwards;min-height:560px;}
 .hero-glow{position:absolute;top:30%;left:50%;width:500px;height:500px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(232,80,30,.10) 0%,transparent 65%);pointer-events:none;filter:blur(60px);z-index:0;}
@@ -95,11 +91,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   border:1px solid var(--paper-line);
   border-radius:14px;overflow:hidden;
   box-shadow:0 30px 80px rgba(26,26,26,.10),0 8px 24px rgba(26,26,26,.04);
+  height:340px;
+  display:flex;flex-direction:column;
 }
 .agent-card-head{
   padding:13px 18px;
   border-bottom:1px solid var(--paper-line);
   display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.agent-card-body{
+  flex:1;position:relative;overflow:hidden;
+}
+.agent-card-body > div{
+  position:absolute;inset:0;
 }
 .agent-card-title{
   display:flex;align-items:center;gap:8px;
@@ -114,8 +119,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .agent-card-meta{font-family:var(--mono);font-size:10px;color:var(--ink-mute);letter-spacing:.06em;text-transform:uppercase;}
 
 /* STAGE 1: chat input panel */
-.hero-stage{padding:20px;display:flex;flex-direction:column;gap:14px;}
-.hero-stage.hidden{display:none;}
+.hero-stage{padding:24px 22px;display:flex;flex-direction:column;gap:14px;justify-content:center;
+  opacity:0;transition:opacity .35s ease;pointer-events:none;}
+.hero-stage.active{opacity:1;pointer-events:auto;}
 .hero-stage-label{
   font-family:var(--mono);font-size:10px;color:var(--teal);
   letter-spacing:.08em;text-transform:uppercase;font-weight:600;
@@ -156,39 +162,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   cursor:default;display:flex;align-items:center;
 }
 
-.hero-chips{display:flex;flex-wrap:wrap;gap:6px;}
-.hero-chip{
-  padding:5px 11px;
-  background:var(--white);
-  border:1px solid var(--paper-line);
-  border-radius:100px;
-  font-size:11px;color:var(--ink-dim);
-  font-weight:500;
-  transition:all .2s ease;
-  opacity:0;animation:chipFadeIn .4s ease forwards;
-}
-.hero-chip:nth-child(1){animation-delay:.1s;}
-.hero-chip:nth-child(2){animation-delay:.2s;}
-.hero-chip:nth-child(3){animation-delay:.3s;}
-.hero-chip:nth-child(4){animation-delay:.4s;}
-.hero-chip.selected{
-  background:var(--teal-soft);
-  border-color:var(--teal);
-  color:var(--teal);
-}
-@keyframes chipFadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
 /* STAGE 2: pending re-optimize banner */
 .hero-pending{
-  padding:14px 18px;
+  padding:24px 22px;
   background:var(--amber-soft);
-  border-top:1px solid var(--paper-line);
-  border-bottom:1px solid var(--paper-line);
-  display:none;
+  display:flex;flex-direction:column;justify-content:center;
   opacity:0;
-  transition:opacity .3s ease;
+  transition:opacity .35s ease;
+  pointer-events:none;
 }
-.hero-pending.show{display:block;opacity:1;}
+.hero-pending.active{opacity:1;pointer-events:auto;}
 .hero-pending-label{
   font-family:var(--mono);font-size:9px;color:#9c7a2e;
   letter-spacing:.08em;text-transform:uppercase;font-weight:600;
@@ -216,13 +199,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 
 /* STAGE 3: re-planning progress */
 .hero-replan{
-  padding:24px 22px;
-  display:none;
-  flex-direction:column;gap:12px;
+  padding:28px 26px;
+  display:flex;
+  flex-direction:column;gap:14px;justify-content:center;
   opacity:0;
-  transition:opacity .3s ease;
+  transition:opacity .35s ease;
+  pointer-events:none;
 }
-.hero-replan.show{display:flex;opacity:1;}
+.hero-replan.active{opacity:1;pointer-events:auto;}
 .hero-replan-eyebrow{
   font-family:var(--mono);font-size:10px;color:var(--teal);
   letter-spacing:.08em;text-transform:uppercase;font-weight:600;
@@ -265,15 +249,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 
 /* STAGE 4: notify queue card */
 .hero-notify{
-  display:none;flex-direction:column;
+  display:flex;flex-direction:column;
   opacity:0;
   transition:opacity .4s ease;
+  pointer-events:none;
+  overflow-y:auto;
 }
-.hero-notify.show{display:flex;opacity:1;}
+.hero-notify.active{opacity:1;pointer-events:auto;}
 .hero-notify-head{
   padding:14px 18px;
   border-bottom:1px solid var(--paper-line);
   background:var(--paper-warm);
+  flex-shrink:0;
 }
 .hero-notify-eyebrow{
   font-family:var(--mono);font-size:9px;color:var(--amber);
@@ -294,6 +281,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   background:var(--red-soft);
   border-top:1px solid rgba(184,90,82,.18);
   position:relative;
+  flex-shrink:0;
 }
 .hero-notify-card::before{
   content:'';position:absolute;
@@ -338,24 +326,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   width:6px;height:6px;border-radius:50%;background:var(--ink);
 }
 
-/* COMPACT LIVE AGENT FEED — under workflow card */
+/* COMPACT LIVE AGENT FEED — fixed height, cycling */
 .hero-feed-card{
   position:relative;z-index:1;width:100%;max-width:490px;
   background:var(--white);
   border:1px solid var(--paper-line);
   border-radius:14px;overflow:hidden;
   box-shadow:0 20px 50px rgba(26,26,26,.06),0 4px 12px rgba(26,26,26,.03);
+  height:228px;
+  display:flex;flex-direction:column;
 }
 .hero-feed-head{
   padding:11px 18px;
   border-bottom:1px solid var(--paper-line);
   display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
 }
 .hero-feed-title{
   display:flex;align-items:center;gap:8px;
   font-size:13px;font-weight:600;color:var(--ink);
 }
 .hero-feed-meta{font-family:var(--mono);font-size:10px;color:var(--ink-mute);letter-spacing:.06em;text-transform:uppercase;}
+.hero-feed-body{
+  flex:1;overflow:hidden;
+}
 
 .feed-item{
   padding:11px 16px 11px 34px;
@@ -363,11 +357,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   position:relative;
   opacity:0;
   transition:opacity .4s ease;
+  height:62px;
+  display:flex;flex-direction:column;justify-content:center;
+  overflow:hidden;
 }
 .feed-item.show{opacity:1;}
 .feed-item:last-child{border-bottom:none;}
 .feed-item::before{
-  content:'';position:absolute;left:16px;top:14px;
+  content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);
   width:8px;height:8px;border-radius:50%;
 }
 .feed-item.eld::before{background:var(--amber);box-shadow:0 0 0 3px var(--amber-soft);}
@@ -654,62 +651,64 @@ footer{background:var(--paper);border-top:1px solid var(--paper-line-soft);paddi
           <span class="agent-card-meta" id="hero-state-meta">375 trucks · monitoring</span>
         </div>
 
-        <!-- STAGE 1: chat input -->
-        <div class="hero-stage" id="hero-stage-1">
-          <div class="hero-stage-label">Tell the agent what changed</div>
-          <div class="hero-input-wrap" id="hero-input-wrap">
-            <div class="hero-input placeholder" id="hero-input"><span id="hero-input-text"></span><span class="hero-input-cursor" id="hero-input-cursor"></span></div>
-            <button class="hero-send-btn" id="hero-send-btn">Send</button>
-          </div>
-        </div>
-
-        <!-- STAGE 2: pending re-optimize -->
-        <div class="hero-pending" id="hero-pending">
-          <div class="hero-pending-label">1 change pending</div>
-          <div class="hero-pending-msg"><strong>Max</strong> called in sick · 2 loads need coverage</div>
-          <button class="hero-reopt-btn" id="hero-reopt-btn">
-            Re-optimize week
-            <span style="font-family:monospace;">→</span>
-          </button>
-        </div>
-
-        <!-- STAGE 3: re-planning progress -->
-        <div class="hero-replan" id="hero-replan">
-          <div class="hero-replan-eyebrow"><span id="hero-replan-eyebrow-text">Re-planning</span></div>
-          <div class="hero-replan-title" id="hero-replan-title">Re-planning the week</div>
-          <div class="hero-replan-bar">
-            <div class="hero-replan-fill" id="hero-replan-fill"></div>
-          </div>
-          <div class="hero-replan-status" id="hero-replan-status">Reading driver schedules and HOS…</div>
-          <div class="hero-replan-summary" id="hero-replan-summary">
-            <span class="hero-replan-summary-check">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#0E8378" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span><strong id="hero-replan-summary-count">10</strong> drivers' schedules updated.</span>
-          </div>
-        </div>
-
-        <!-- STAGE 4: notify queue -->
-        <div class="hero-notify" id="hero-notify">
-          <div class="hero-notify-head">
-            <div class="hero-notify-eyebrow">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Plan updates · Notify queue
+        <div class="agent-card-body">
+          <!-- STAGE 1: chat input -->
+          <div class="hero-stage" id="hero-stage-1">
+            <div class="hero-stage-label">Tell the agent what changed</div>
+            <div class="hero-input-wrap" id="hero-input-wrap">
+              <div class="hero-input placeholder" id="hero-input"><span id="hero-input-text"></span><span class="hero-input-cursor" id="hero-input-cursor"></span></div>
+              <button class="hero-send-btn" id="hero-send-btn">Send</button>
             </div>
-            <div class="hero-notify-title">Notify queue</div>
-            <div class="hero-notify-sub">2 changes from this re-plan — notify the affected parties below.</div>
           </div>
-          <div class="hero-notify-card">
-            <div class="hero-notify-tag">
-              <span>↔ Sick callout · Max → Morales</span>
-              <span class="hero-notify-tag-count">2 DRIVERS</span>
+
+          <!-- STAGE 2: pending re-optimize -->
+          <div class="hero-pending" id="hero-pending">
+            <div class="hero-pending-label">1 change pending</div>
+            <div class="hero-pending-msg"><strong>Max</strong> called in sick · 2 loads need coverage</div>
+            <button class="hero-reopt-btn" id="hero-reopt-btn">
+              Re-optimize week
+              <span style="font-family:monospace;">→</span>
+            </button>
+          </div>
+
+          <!-- STAGE 3: re-planning progress -->
+          <div class="hero-replan" id="hero-replan">
+            <div class="hero-replan-eyebrow"><span id="hero-replan-eyebrow-text">Re-planning</span></div>
+            <div class="hero-replan-title" id="hero-replan-title">Re-planning the week</div>
+            <div class="hero-replan-bar">
+              <div class="hero-replan-fill" id="hero-replan-fill"></div>
             </div>
-            <div class="hero-notify-name">Max · Truck #1108</div>
-            <div class="hero-notify-status">Off · sick</div>
-            <div class="hero-notify-detail">Loads reassigned across same-terminal drivers. <strong>Morales</strong> covers Mon–Tue · Max resumes Wed.</div>
-            <div class="hero-notify-actions">
-              <span class="hero-notify-btn"><span class="hero-notify-btn-dot"></span> Notify driver</span>
-              <span class="hero-notify-btn">✉ Notify broker</span>
+            <div class="hero-replan-status" id="hero-replan-status">Reading driver schedules and HOS…</div>
+            <div class="hero-replan-summary" id="hero-replan-summary">
+              <span class="hero-replan-summary-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#0E8378" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span><strong id="hero-replan-summary-count">10</strong> drivers' schedules updated.</span>
+            </div>
+          </div>
+
+          <!-- STAGE 4: notify queue -->
+          <div class="hero-notify" id="hero-notify">
+            <div class="hero-notify-head">
+              <div class="hero-notify-eyebrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Plan updates · Notify queue
+              </div>
+              <div class="hero-notify-title">Notify queue</div>
+              <div class="hero-notify-sub">2 changes from this re-plan — notify the affected parties below.</div>
+            </div>
+            <div class="hero-notify-card">
+              <div class="hero-notify-tag">
+                <span>↔ Sick callout · Max → Morales</span>
+                <span class="hero-notify-tag-count">2 DRIVERS</span>
+              </div>
+              <div class="hero-notify-name">Max · Truck #1108</div>
+              <div class="hero-notify-status">Off · sick</div>
+              <div class="hero-notify-detail">Loads reassigned across same-terminal drivers. <strong>Morales</strong> covers Mon–Tue · Max resumes Wed.</div>
+              <div class="hero-notify-actions">
+                <span class="hero-notify-btn"><span class="hero-notify-btn-dot"></span> Notify driver</span>
+                <span class="hero-notify-btn">✉ Notify broker</span>
+              </div>
             </div>
           </div>
         </div>
@@ -724,17 +723,19 @@ footer{background:var(--paper);border-top:1px solid var(--paper-line-soft);paddi
           </div>
           <span class="hero-feed-meta" id="hero-feed-meta">Watching · 375 trucks</span>
         </div>
-        <div class="feed-item" id="feed-1">
-          <div class="feed-item-src">ELD · Hours of service</div>
-          <div class="feed-item-msg"><strong>G. Sandhu (Truck #1042)</strong> low on hours · Wed break scheduled.</div>
-        </div>
-        <div class="feed-item" id="feed-2">
-          <div class="feed-item-src">Market intelligence</div>
-          <div class="feed-item-msg">Lane upgrade: <strong>Dallas → Phoenix</strong> spot rates 14% above avg.</div>
-        </div>
-        <div class="feed-item" id="feed-3">
-          <div class="feed-item-src">Broker · Outreach</div>
-          <div class="feed-item-msg"><strong>Mike Reilly</strong> countered $785 on KC → Tulsa.</div>
+        <div class="hero-feed-body">
+          <div class="feed-item" id="feed-1">
+            <div class="feed-item-src">ELD · Hours of service</div>
+            <div class="feed-item-msg"><strong>G. Sandhu (Truck #1042)</strong> low on hours · Wed break scheduled.</div>
+          </div>
+          <div class="feed-item" id="feed-2">
+            <div class="feed-item-src">Market intelligence</div>
+            <div class="feed-item-msg">Lane upgrade: <strong>Dallas → Phoenix</strong> spot rates 14% above avg.</div>
+          </div>
+          <div class="feed-item" id="feed-3">
+            <div class="feed-item-src">Broker · Outreach</div>
+            <div class="feed-item-msg"><strong>Mike Reilly</strong> countered $785 on KC → Tulsa.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1145,10 +1146,7 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
 
 // ============================================
 // HERO ANIMATION — full dispatcher workflow
-// Stage 1: types "J. Dhaliwal called in sick"
-// Stage 2: send → pending re-optimize banner
-// Stage 3: re-optimize click → progress bar
-// Stage 4: notify queue card surfaces
+// Loops continuously every ~14s
 // ============================================
 (function(){
   const stage1 = document.getElementById('hero-stage-1');
@@ -1158,7 +1156,6 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
 
   const input = document.getElementById('hero-input');
   const inputText = document.getElementById('hero-input-text');
-  const inputCursor = document.getElementById('hero-input-cursor');
   const inputWrap = document.getElementById('hero-input-wrap');
   const sendBtn = document.getElementById('hero-send-btn');
   const reoptBtn = document.getElementById('hero-reopt-btn');
@@ -1180,10 +1177,15 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     { at: 0.85, text: 'Stress-testing plan · 8,000 scenarios' }
   ];
 
-  // Initial placeholder
-  inputText.textContent = 'e.g. "Max called in sick"';
+  const placeholder = 'e.g. "Max called in sick"';
+  inputText.textContent = placeholder;
 
   function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  function showStage(target){
+    [stage1, stage2, stage3, stage4].forEach(s => s.classList.remove('active'));
+    if(target) target.classList.add('active');
+  }
 
   async function typeText(text, speed=55){
     input.classList.remove('placeholder');
@@ -1194,46 +1196,60 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     }
   }
 
+  function resetState(){
+    input.classList.add('placeholder');
+    inputText.textContent = placeholder;
+    inputWrap.classList.remove('focused');
+    sendBtn.style.background = '';
+    sendBtn.style.transform = '';
+    replanFill.style.width = '0%';
+    replanEyebrow.textContent = 'Re-planning';
+    replanTitle.textContent = 'Re-planning the week';
+    replanStatus.textContent = 'Reading driver schedules and HOS…';
+    replanSummary.classList.remove('show');
+    reoptBtn.classList.remove('pressed');
+    stateLabel.textContent = 'Dispatcher · Live';
+    stateMeta.textContent = '375 trucks · monitoring';
+  }
+
   async function runFlow(){
-    await sleep(1400);
+    resetState();
+    showStage(stage1);
 
-    // Stage 1a: focus input (border turns teal)
+    await sleep(1200);
+
+    // Stage 1a: focus input
     inputWrap.classList.add('focused');
-    await sleep(600);
-
-    // Stage 1b: typing the message
-    await typeText('Max called in sick');
     await sleep(500);
 
-    // Stage 1d: send button press
+    // Stage 1b: type the message
+    await typeText('Max called in sick');
+    await sleep(450);
+
+    // Stage 1c: send button press
     sendBtn.style.background = 'var(--orange)';
     sendBtn.style.transform = 'scale(.96)';
-    await sleep(200);
+    await sleep(180);
     sendBtn.style.transform = 'scale(1)';
-    await sleep(300);
+    await sleep(280);
 
-    // Stage 2: transition to pending
-    stage1.classList.add('hidden');
-    stage2.classList.add('show');
+    // Stage 2: pending
+    showStage(stage2);
     stateLabel.textContent = '1 change pending';
     stateMeta.textContent = 'Awaiting re-optimize';
-    await sleep(1100);
+    await sleep(1300);
 
     // Stage 2b: re-optimize button press
     reoptBtn.classList.add('pressed');
     await sleep(220);
     reoptBtn.classList.remove('pressed');
-    await sleep(200);
+    await sleep(180);
 
-    // Stage 3: transition to replanning
-    stage2.classList.remove('show');
-    await sleep(280);
-    stage2.style.display = 'none';
-    stage3.classList.add('show');
+    // Stage 3: replanning
+    showStage(stage3);
     stateLabel.textContent = 'Re-planning';
     stateMeta.textContent = 'CP-SAT · LNS · 8,000 scenarios';
 
-    // Animate progress bar through ~2.6s
     const duration = 2600;
     const stepMs = 60;
     const totalSteps = duration / stepMs;
@@ -1259,18 +1275,24 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     stateLabel.textContent = 'Plan updated';
     stateMeta.textContent = '10 drivers · 2 brokers';
 
-    await sleep(1400);
+    await sleep(1500);
 
-    // Stage 4: notify queue surfaces
-    stage3.classList.remove('show');
-    await sleep(280);
-    stage3.style.display = 'none';
-    stage4.classList.add('show');
+    // Stage 4: notify queue
+    showStage(stage4);
     stateLabel.textContent = 'Notify queue';
     stateMeta.textContent = '2 changes · awaiting send';
+
+    // Hold on notify queue, then loop
+    await sleep(4500);
   }
 
-  setTimeout(runFlow, 600);
+  async function loop(){
+    while(true){
+      await runFlow();
+    }
+  }
+
+  setTimeout(loop, 500);
 })();
 
 // ============================================
@@ -1283,7 +1305,6 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     { id: 'feed-3', kind: 'broker', src: 'Broker · Outreach', msg: '<strong>Mike Reilly</strong> countered $785 on KC → Tulsa.' }
   ];
 
-  // Pool of alerts to rotate through — pulled from the demo's actual alert seed data
   const pool = [
     { kind: 'eld', src: 'ELD · Driver tracking', msg: '<strong>J. Morales (Truck #1213)</strong> still unloading in Chicago.' },
     { kind: 'maint', src: 'Telematics · Truck health', msg: '<strong>Truck #3024</strong> brake job scheduled · Friday yard return.' },
@@ -1301,11 +1322,8 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
 
   let poolIdx = 0;
 
-  function getFeedItemEl(id){
-    return document.getElementById(id);
-  }
+  function getFeedItemEl(id){ return document.getElementById(id); }
 
-  // Show initial 3 items in sequence
   async function showInitial(){
     for(let i = 0; i < feedItems.length; i++){
       await new Promise(r => setTimeout(r, 400));
@@ -1314,7 +1332,6 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
   }
 
   function renderItem(el, item){
-    // Reset state then update content
     el.classList.remove('eld','maint','mci','broker');
     el.classList.add(item.kind);
     el.querySelector('.feed-item-src').textContent = item.src;
@@ -1322,8 +1339,6 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
   }
 
   async function cycleNext(){
-    // Pick oldest item (top), fade it, replace with new content, fade back in
-    // Visually: top item drops, others shift up, new item appears at bottom
     const oldest = feedItems.shift();
     const newItem = pool[poolIdx % pool.length];
     poolIdx++;
@@ -1332,18 +1347,9 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     oldEl.classList.remove('show');
     await new Promise(r => setTimeout(r, 400));
 
-    // Update its content with new item data
     renderItem(oldEl, newItem);
-
-    // Move it to bottom of DOM order so it becomes the newest
     oldEl.parentNode.appendChild(oldEl);
-
-    // Add back to tracking array with the new content
     feedItems.push({ id: oldest.id, ...newItem });
-
-    // Update meta counter (a small visible tick)
-    const meta = document.getElementById('hero-feed-meta');
-    if (meta) meta.textContent = `Watching · ${375} trucks`;
 
     await new Promise(r => setTimeout(r, 100));
     oldEl.classList.add('show');
@@ -1351,7 +1357,6 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
 
   async function run(){
     await showInitial();
-    // Start cycling after initial display
     await new Promise(r => setTimeout(r, 3500));
     while(true){
       await cycleNext();
@@ -1362,5 +1367,11 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
   setTimeout(run, 800);
 })();
 </script>
+
+<!-- Vercel Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
+<!-- Vercel Speed Insights -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
+
 </body>
 </html>
