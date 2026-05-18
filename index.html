@@ -1080,8 +1080,9 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
 });
 
 // ============================================
-// AGENT DEMO ANIMATION — scroll-triggered
-// Loops continuously once section is in view
+// AGENT DEMO ANIMATION — viewport-gated
+// Pauses when scrolled out of view, restarts
+// fresh when scrolled back in or CTA clicked.
 // ============================================
 (function(){
   const stage1 = document.getElementById('hero-stage-1');
@@ -1115,19 +1116,37 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
   const placeholder = 'e.g. "Max called in sick"';
   if(inputText) inputText.textContent = placeholder;
 
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+  // Track whether the demo is in viewport
+  let inView = false;
+  // Track current run id — if it changes mid-flight, the running flow knows to abort
+  let runId = 0;
+
+  // sleep that aborts when run id changes
+  function sleep(ms, id){
+    return new Promise(resolve => {
+      const start = Date.now();
+      const tick = () => {
+        if(id !== runId) return resolve('abort');
+        if(Date.now() - start >= ms) return resolve();
+        setTimeout(tick, Math.min(50, ms - (Date.now() - start)));
+      };
+      tick();
+    });
+  }
 
   function showStage(target){
     [stage1, stage2, stage3, stage4].forEach(s => s && s.classList.remove('active'));
     if(target) target.classList.add('active');
   }
 
-  async function typeText(text, speed=35){
+  async function typeText(text, id, speed=35){
     input.classList.remove('placeholder');
     inputText.textContent = '';
     for(let i=0; i<=text.length; i++){
+      if(id !== runId) return 'abort';
       inputText.textContent = text.substring(0, i);
-      await sleep(speed + Math.random()*20);
+      const r = await sleep(speed + Math.random()*20, id);
+      if(r === 'abort') return 'abort';
     }
   }
 
@@ -1145,44 +1164,38 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     reoptBtn.classList.remove('pressed');
     stateLabel.textContent = 'Dispatcher · Live';
     stateMeta.textContent = '375 trucks · monitoring';
+    showStage(stage1);
   }
 
-  let running = false;
-
-  async function runFlow(){
+  // Macros — every await returns 'abort' if runId changed
+  async function runFlow(id){
     resetState();
-    showStage(stage1);
+    let r;
 
-    await sleep(1800);
+    r = await sleep(1500, id); if(r==='abort') return;
 
-    // Stage 1a: focus input
     inputWrap.classList.add('focused');
-    await sleep(500);
+    r = await sleep(500, id); if(r==='abort') return;
 
-    // Stage 1b: type the message
-    await typeText('Max called in sick');
-    await sleep(450);
+    r = await typeText('Max called in sick', id); if(r==='abort') return;
+    r = await sleep(450, id); if(r==='abort') return;
 
-    // Stage 1c: send button press
     sendBtn.style.background = 'var(--orange)';
     sendBtn.style.transform = 'scale(.96)';
-    await sleep(180);
+    r = await sleep(180, id); if(r==='abort') return;
     sendBtn.style.transform = 'scale(1)';
-    await sleep(280);
+    r = await sleep(280, id); if(r==='abort') return;
 
-    // Stage 2: pending
     showStage(stage2);
     stateLabel.textContent = '1 change pending';
     stateMeta.textContent = 'Awaiting re-optimize';
-    await sleep(1300);
+    r = await sleep(1300, id); if(r==='abort') return;
 
-    // Stage 2b: re-optimize button press
     reoptBtn.classList.add('pressed');
-    await sleep(220);
+    r = await sleep(220, id); if(r==='abort') return;
     reoptBtn.classList.remove('pressed');
-    await sleep(180);
+    r = await sleep(180, id); if(r==='abort') return;
 
-    // Stage 3: replanning
     showStage(stage3);
     stateLabel.textContent = 'Re-planning';
     stateMeta.textContent = '8,000 scenarios';
@@ -1193,6 +1206,7 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     let lastStageText = '';
 
     for (let i = 0; i <= totalSteps; i++) {
+      if(id !== runId) return;
       const frac = i / totalSteps;
       replanFill.style.width = (frac * 100) + '%';
       const stage = stages.slice().reverse().find(s => frac >= s.at);
@@ -1200,11 +1214,10 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
         replanStatus.textContent = stage.text;
         lastStageText = stage.text;
       }
-      await sleep(stepMs);
+      r = await sleep(stepMs, id); if(r==='abort') return;
     }
     replanFill.style.width = '100%';
 
-    // Done state
     replanEyebrow.textContent = 'Done';
     replanTitle.textContent = 'Plan updated';
     replanStatus.textContent = 'Picking the best moves…';
@@ -1212,37 +1225,65 @@ document.getElementById('submitBtn')?.addEventListener('click',function(e){
     stateLabel.textContent = 'Plan updated';
     stateMeta.textContent = '10 drivers · 2 brokers';
 
-    await sleep(1500);
+    r = await sleep(1500, id); if(r==='abort') return;
 
-    // Stage 4: notify queue
     showStage(stage4);
     stateLabel.textContent = 'Notify queue';
     stateMeta.textContent = '2 changes · awaiting send';
 
-    // Hold on notify queue, then loop
-    await sleep(4500);
+    r = await sleep(4500, id); if(r==='abort') return;
   }
 
-  async function loop(){
-    running = true;
-    while(running){
-      await runFlow();
+  async function loop(id){
+    while(id === runId && inView){
+      await runFlow(id);
     }
   }
 
-  // Trigger animation when demo section scrolls into view
+  function start(){
+    // Bump runId — any in-flight flow aborts
+    runId++;
+    const myId = runId;
+    resetState();
+    loop(myId);
+  }
+
+  function stop(){
+    runId++; // abort any running flow
+    resetState();
+  }
+
+  // Trigger via scroll
   const demoSection = document.getElementById('demo');
   if(demoSection && stage1){
-    const startObs = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if(entry.isIntersecting && !running){
-          loop();
-          startObs.unobserve(entry.target);
+        if(entry.isIntersecting){
+          if(!inView){
+            inView = true;
+            start();
+          }
+        } else {
+          if(inView){
+            inView = false;
+            stop();
+          }
         }
       });
-    }, { threshold: 0.25 });
-    startObs.observe(demoSection);
+    }, { threshold: 0.35 });
+    observer.observe(demoSection);
   }
+
+  // Trigger via "See how it works" CTA — restart fresh even if already in view
+  document.querySelectorAll('a[href="#demo"]').forEach(link => {
+    link.addEventListener('click', () => {
+      // Give scroll-into-view a moment; then force a fresh start
+      setTimeout(() => {
+        inView = true;
+        start();
+      }, 600);
+    });
+  });
 })();
 
 // ============================================
